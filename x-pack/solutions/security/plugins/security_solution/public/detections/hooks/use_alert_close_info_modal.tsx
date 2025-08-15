@@ -13,7 +13,6 @@ import {
 } from '../../../common/constants';
 import { KibanaContextProvider, useKibana, useUiSetting$ } from '../../common/lib/kibana';
 import * as i18n from './translations';
-import { useIsExperimentalFeatureEnabled } from '../../common/hooks/use_experimental_features';
 
 const DO_NOT_SHOW_AGAIN_SETTING_KEY = 'securitySolution.alertCloseInfoModal.doNotShowAgain';
 
@@ -80,9 +79,6 @@ const AlertCloseConfirmationModal = ({
 };
 
 export const useAlertCloseInfoModal = () => {
-  const advancedSettingEnabled = useIsExperimentalFeatureEnabled(
-    'continueSuppressionWindowAdvancedSettingEnabled'
-  );
   const [shouldShowModal, setShouldShowModal] = useState(false);
   const [resolveUserConfirmation, setUserConfirmationResolver] = useState<
     (shouldContinue: boolean) => void
@@ -91,10 +87,6 @@ export const useAlertCloseInfoModal = () => {
   const { storage } = services;
 
   const promptAlertCloseConfirmation = useCallback((): Promise<boolean> => {
-    if (!advancedSettingEnabled) {
-      return Promise.resolve(true);
-    }
-
     if (storage.get(DO_NOT_SHOW_AGAIN_SETTING_KEY)) {
       return Promise.resolve(true);
     }
@@ -102,7 +94,7 @@ export const useAlertCloseInfoModal = () => {
     return new Promise((resolvePromise) => {
       setUserConfirmationResolver(() => resolvePromise);
     });
-  }, [storage, advancedSettingEnabled]);
+  }, [storage]);
 
   const handleConfirmationResult = useCallback(
     (isConfirmed: boolean) => {
