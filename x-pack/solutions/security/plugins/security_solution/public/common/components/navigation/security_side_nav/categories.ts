@@ -44,4 +44,8 @@ export const CATEGORIES: SeparatorLinkCategory[] = [
     type: LinkCategoryType.separator,
     linkIds: [SecurityPageName.siemReadiness],
   },
+  {
+    type: LinkCategoryType.separator,
+    linkIds: [SecurityPageName.aiValue],
+  },
 ];
