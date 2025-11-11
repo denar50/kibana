@@ -95,10 +95,12 @@ import type { SecuritySolutionUiConfigType } from './common/types';
 import type { OnboardingService } from './onboarding/service';
 import type { TelemetryServiceStart } from './common/lib/telemetry';
 import type { SiemMigrationsService } from './siem_migrations/service';
+import { SharePluginSetup } from '@kbn/share-plugin/public';
 
 export interface SetupPlugins {
   cloud?: CloudSetup;
   home?: HomePublicPluginSetup;
+  share?: SharePluginSetup;
   licensing: LicensingPluginSetup;
   management: ManagementSetup;
   security: SecurityPluginSetup;
