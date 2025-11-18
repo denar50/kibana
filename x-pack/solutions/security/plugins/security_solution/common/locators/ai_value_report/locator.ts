@@ -10,15 +10,39 @@
 import { setStateToKbnUrl } from '@kbn/kibana-utils-plugin/common';
 import type { LocatorDefinition, LocatorPublic } from '@kbn/share-plugin/public';
 import type { GlobalQueryStateFromUrl } from '@kbn/data-plugin/public';
-
+import { z } from '@kbn/zod'
 import { AI_VALUE_REPORT_LOCATOR, AI_VALUE_PATH, APP_UI_ID } from '../../constants';
 
-type AIValueReportParams = {
-  timeRange: {
-    to: string,
-    from: string
-  }
-}
+const valueMetricsSchema = z.object({
+  attackDiscoveryCount: z.number(),
+  filteredAlerts: z.number(),
+  filteredAlertsPerc: z.number(),
+  escalatedAlertsPerc: z.number(),
+  hoursSaved: z.number(),
+  totalAlerts: z.number(),
+  costSavings: z.number(),
+})
+
+const AIValueReportParamsSchema = z.object({
+  timeRange: z.object({
+    to: z.string(),
+    from: z.string()
+  }),
+  insight: z.string().nonempty(),
+  reportData: z.object({
+    kibanaSettings: z.object({
+      analystHourlyRate: z.number(),
+      minutesPerAlert: z.number(),
+    }),
+    attackAlertIds: z.array(z.string()),
+    valueMetrics: valueMetricsSchema,
+    valueMetricsCompare: valueMetricsSchema,
+  })
+})
+
+export type AIValueReportParams = z.infer<typeof AIValueReportParamsSchema>
+
+export type ForwardedAIValueReportState = AIValueReportParams
 
 export type AIValueReportLocator = LocatorPublic<AIValueReportParams>;
 
@@ -37,11 +61,24 @@ export class AIValueReportLocatorDefinition implements LocatorDefinition<AIValue
     // );
 
     const path = AI_VALUE_PATH
-
+    console.log(">>> LOCATOR RETRNED", {
+      app: APP_UI_ID,
+      path,
+      state: params,
+    })
     return {
       app: APP_UI_ID,
       path,
-      state: {},
+      state: params,
     };
   };
+}
+
+export const parseLocationState = (state: unknown): (ForwardedAIValueReportState | undefined) => {
+  const result = AIValueReportParamsSchema.passthrough().safeParse(state)
+  if (result.error) {
+    return undefined
+  }
+
+  return result.data
 }

@@ -21,10 +21,11 @@ export const waitForRenderComplete = async (
     Actions.WAIT_RENDER,
     'wait'
   );
-
+  console.log(">>> ELEMENTS USED TO ASSESS RENDER COMPLETE ", layout.selectors.renderComplete)
   await browser.evaluate<string[]>(
     {
       fn: async (selector) => {
+        console.log(">>> browser.evaluate", selector)
         const visualizations: NodeListOf<Element> = document.querySelectorAll(selector);
         const visCount = visualizations.length;
         const renderedTasks = [];

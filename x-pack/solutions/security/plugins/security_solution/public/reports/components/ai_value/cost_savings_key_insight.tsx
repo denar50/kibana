@@ -25,27 +25,25 @@ import { licenseService } from '../../../common/hooks/use_license';
 import { useAssistantAvailability } from '../../../assistant/use_assistant_availability';
 import { useFindCostSavingsPrompts } from '../../hooks/use_find_cost_savings_prompts';
 import { useDefaultAIConnectorId } from '../../../common/hooks/use_default_ai_connector_id';
+import { useAIValueExportContext } from '../../providers/ai_value/export_provider';
 
 interface Props {
   isLoading: boolean;
   lensResponse: VisualizationTablesWithMeta | null;
 }
 
-export const CostSavingsKeyInsight: React.FC<Props> = ({ isLoading, lensResponse }) => {
-  const {
-    euiTheme: { size },
-  } = useEuiTheme();
-
+const CostSavingsKeyInsightLoader: React.FC<Props> = ({ isLoading, lensResponse }) => {
   const { http, notifications, inference } = useKibana().services;
   const [insightResult, setInsightResult] = useState<string>('');
   const { defaultConnectorId } = useDefaultAIConnectorId();
+  const exportContext = useAIValueExportContext()
 
-  const hasEnterpriseLicence = licenseService.isEnterprise();
+  const hasEnterpriseLicense = licenseService.isEnterprise();
   const { hasAssistantPrivilege, isAssistantEnabled } = useAssistantAvailability();
   const prompts = useFindCostSavingsPrompts({
     context: {
       isAssistantEnabled:
-        hasEnterpriseLicence && (isAssistantEnabled ?? false) && (hasAssistantPrivilege ?? false),
+        hasEnterpriseLicense && (isAssistantEnabled ?? false) && (hasAssistantPrivilege ?? false),
       httpFetch: http.fetch,
       toasts: notifications.toasts,
     },
@@ -73,6 +71,19 @@ export const CostSavingsKeyInsight: React.FC<Props> = ({ isLoading, lensResponse
   useEffect(() => {
     if (!lensResponse) setInsightResult('');
   }, [lensResponse]);
+  useEffect(() => exportContext?.setInsight(insightResult), [exportContext?.setInsight, insightResult])
+  return <CostSavingsKeyInsightView insight={insightResult} isLoading={isLoading} />
+};
+
+interface ViewProps {
+  insight: string,
+  isLoading: boolean,
+}
+
+const CostSavingsKeyInsightView: React.FC<ViewProps> = ({ insight, isLoading }) => {
+  const {
+    euiTheme: { size },
+  } = useEuiTheme();
   return (
     <div
       data-test-subj="alertProcessingKeyInsightsContainer"
@@ -106,15 +117,26 @@ export const CostSavingsKeyInsight: React.FC<Props> = ({ isLoading, lensResponse
 
         <EuiSpacer size="m" />
 
-        {insightResult && !isLoading ? (
-          <Markdown markdown={insightResult} />
+        {insight && !isLoading ? (
+          <Markdown markdown={insight} />
         ) : (
           <EuiSkeletonText lines={3} size="s" isLoading={true} />
         )}
       </span>
     </div>
   );
-};
+}
+
+export const CostSavingsKeyInsight: React.FC<Props> = (props) => {
+  const exportContext = useAIValueExportContext()
+  if (exportContext && exportContext.forwardedState?.insight) {
+    return <CostSavingsKeyInsightView isLoading={false} insight={exportContext.forwardedState?.insight} />
+  }
+
+  const { isLoading, lensResponse } = props
+
+  return <CostSavingsKeyInsightLoader isLoading={isLoading} lensResponse={lensResponse} />
+}
 
 const getPrompt = (result: string, prompts: { part1: string; part2: string }) => {
   const prompt = `${prompts.part1}

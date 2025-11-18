@@ -37,6 +37,7 @@ export function registerGenerationRoutesInternal(reporting: ReportingCore, logge
         },
       },
       authorizedUserPreRouting(reporting, async (user, context, req, res) => {
+        console.log(">>> came here authorizedUserPreRouting")
         try {
           const requestHandler = new GenerateRequestHandler({
             reporting,

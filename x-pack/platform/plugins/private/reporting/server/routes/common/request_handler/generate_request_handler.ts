@@ -105,6 +105,8 @@ export class GenerateRequestHandler extends RequestHandler<
       return checkErrorResponse;
     }
 
+    console.log(">>> RUNING ACTUAL REQUEST HANDLER", exportTypeId, JSON.stringify(jobParams))
+
     let report: Report | undefined;
     try {
       report = await this.enqueueJob(params);
